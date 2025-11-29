@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+redis
+celery
+langchain
+langchain-openai
+pydantic
+python-dotenv
+requests
+duckduckgo-search==4.1.1
+langchain-community
+pymongo
+ddgs
