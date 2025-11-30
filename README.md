@@ -12,14 +12,14 @@ graph TD
     W -->|analyze| P[PeerAgent Router]
     P -->|dev task| D[DevAgent]
     P -->|content/search task| C[ContentAgent]
-    C -->|DuckDuckGo search| Web[Internet]
+    C -->|Google CSE| Web[Internet]
     W -->|log results & errors| DB[(MongoDB task_logs)]
 ```
 
 ### Components
-- **PeerAgent**: Routes tasks to `DevAgent` or `ContentAgent` via simple keyword fallback or LLM (OpenAI GPT-4 when key provided).
+- **PeerAgent**: Routes tasks to `DevAgent` or `ContentAgent` via simple keyword fallback or LLM (OpenAI, defaults to `OPENAI_MODEL_ROUTER`).
 - **DevAgent**: Handles coding-style tasks; can perform simple file writes when prompted.
-- **ContentAgent**: Performs DuckDuckGo searches (via `langchain_community` tool) and cites sources in answers.
+- **ContentAgent**: Uses Google Custom Search HTTP API (when `GOOGLE_API_KEY` + `GOOGLE_CSE_ID` are set) to pull snippets and have the LLM answer with citations; without those keys it falls back to plain LLM answers (no citations).
 - **FastAPI**: Exposes `POST /v1/agent/execute` and `GET /v1/agent/status/{task_id}`.
 - **Celery + Redis**: Queue-backed task execution; workers are stateless and horizontally scalable.
 - **MongoDB**: Persists task results (including errors) as Pydantic-validated documents (`task_logs` collection).
@@ -32,6 +32,8 @@ OPENAI_API_KEY=your-openai-api-key  # optional; fallback routing works without i
 REDIS_URL=redis://redis:6379/0
 MONGODB_URL=mongodb://mongo:27017/
 MONGODB_DB_NAME=agent_logs
+GOOGLE_API_KEY=your-google-api-key  # needed for ContentAgent web search
+GOOGLE_CSE_ID=your-google-cse-id    # needed for ContentAgent web search
 ```
 3) Start stack:
 ```
@@ -52,13 +54,13 @@ curl http://localhost:8000/v1/agent/status/<task_id>
 
 ## Design Notes
 - **Routing**: LLM-based routing when an OpenAI key is present; otherwise deterministic keyword routing to ensure offline functionality.
-- **ContentAgent search & citations**: Uses DuckDuckGo search tool, then summarizes with LLM, adding a short sources section.
+- **ContentAgent search & citations**: Uses Google Custom Search via REST to fetch snippets; answers cite only returned links. Without Google keys it skips search and answers directly.
 - **Logging**: Every task result (success or failure) is persisted to MongoDB (`task_logs`). Logging failures are non-fatal but printed to stdout.
 - **Error handling**: Empty tasks rejected (400/422). Queueing failures return 500. Status endpoint uses Celery backend to report real state/result.
-- **Model selection**: Defaults to `gpt-4o-mini` for routing and workers (cheapest), configurable via `OPENAI_MODEL_ROUTER` and `OPENAI_MODEL_WORKER` env vars.
+- **Model selection**: Defaults to `gpt-4o-mini` for both router and workers (configurable via `OPENAI_MODEL_ROUTER` / `OPENAI_MODEL_WORKER`).
 - **Extensibility**: Add agents by implementing `BaseAgent.execute` and extending `PeerAgent` prompt/routing keywords.
 - **API concerns**: Versioned under `/v1`. Rate limiting can be added via Redis-backed limiters (e.g., `redis-cell`). Consider auth (API keys/JWT) for production.
-- **AI tools**: Uses OpenAI ChatGPT (via `langchain-openai`) for routing and worker LLM calls; swap models via env vars to align cost/quality (e.g., `OPENAI_MODEL_ROUTER`, `OPENAI_MODEL_WORKER`).
+- **AI tools**: Uses OpenAI (via `langchain-openai`) for routing and worker LLM calls; swap models via env vars to align cost/quality.
 
 ### LangGraph vs. current LangChain usage
 - Today: Simple chains and Celery-backed async execution are enough for single-step routing/agent calls.
@@ -71,12 +73,13 @@ curl http://localhost:8000/v1/agent/status/<task_id>
 - CodeDeploy hooks: `appspec.yml` + `scripts/` (before install, start, stop) are available if you deploy via CodeDeploy.
 
 ## Tests
-- `pytest tests/` exercises routing fallback and API happy-path/validation.
-- To extend coverage: add integration tests spinning up Redis/Celery, plus error-path tests (unknown agent, model failures), and contract tests for Mongo persistence.
+- `pytest tests/` exercises API validation, router keyword fallback, and Celery eager path (in-memory broker/backend).
+- `tests/test_api.py` targets a live `/v1/agent/execute/sync` endpoint and is meant for local/manual runs, not CI.
+- To extend coverage: add search happy-path with Google CSE keys, file-write paths for DevAgent, and Mongo persistence/queue failure cases.
 
 ## AI & Prompting
-- LLM: OpenAI GPT-4 for routing, GPT-3.5-turbo for workers (configurable in code).
-- Prompts are concise and task-focused; ContentAgent prompt explicitly requests cited sources when search results are available.
+- LLM: OpenAI models configured via env (`OPENAI_MODEL_ROUTER`, `OPENAI_MODEL_WORKER`); defaults are `gpt-4o-mini` for both.
+- Prompts are concise and task-focused; ContentAgent prompt explicitly requests cited sources when Google search results are available.
 
 ## Production Hardening Ideas
 - Add structured logging (JSON) and observability (OpenTelemetry).
