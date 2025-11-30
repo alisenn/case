@@ -58,6 +58,7 @@ curl http://localhost:8000/v1/agent/status/<task_id>
 - **Model selection**: Defaults to `gpt-4o-mini` for routing and workers (cheapest), configurable via `OPENAI_MODEL_ROUTER` and `OPENAI_MODEL_WORKER` env vars.
 - **Extensibility**: Add agents by implementing `BaseWorker.execute` and extending `PeerAgent` prompt/routing keywords.
 - **API concerns**: Versioned under `/v1`. Rate limiting can be added via Redis-backed limiters (e.g., `redis-cell`). Consider auth (API keys/JWT) for production.
+- **AI tools**: Uses OpenAI ChatGPT (via `langchain-openai`) for routing and worker LLM calls; swap models via env vars to align cost/quality (e.g., `OPENAI_MODEL_ROUTER`, `OPENAI_MODEL_WORKER`).
 
 ### LangGraph vs. current LangChain usage
 - Today: Simple chains and Celery-backed async execution are enough for single-step routing/agent calls.
