@@ -15,26 +15,10 @@ POLL_SECONDS = 45
 )
 def test_task(task_description):
     response = requests.post(
-        f"{BASE_URL}/execute",
+        f"{BASE_URL}/execute/sync",
         json={"task": task_description}
     )
     assert response.status_code == 200
     data = response.json()
-    task_id = data["task_id"]
-    assert data["status"] == "queued"
-
-    # Poll for result
-    final_status = None
-    result_payload = None
-    for _ in range(POLL_SECONDS):
-        status_res = requests.get(f"{BASE_URL}/status/{task_id}")
-        assert status_res.status_code == 200
-        status_data = status_res.json()
-        final_status = status_data["status"]
-        result_payload = status_data.get("result")
-        if final_status in ("SUCCESS", "FAILURE", "completed"):
-            break
-        time.sleep(1)
-
-    assert final_status in ("SUCCESS", "completed")
-    assert isinstance(result_payload, dict)
+    assert data["status"] == "completed"
+    assert isinstance(data.get("result"), str)

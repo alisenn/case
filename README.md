@@ -59,6 +59,11 @@ curl http://localhost:8000/v1/agent/status/<task_id>
 - **Extensibility**: Add agents by implementing `BaseWorker.execute` and extending `PeerAgent` prompt/routing keywords.
 - **API concerns**: Versioned under `/v1`. Rate limiting can be added via Redis-backed limiters (e.g., `redis-cell`). Consider auth (API keys/JWT) for production.
 
+### LangGraph vs. current LangChain usage
+- Today: Simple chains and Celery-backed async execution are enough for single-step routing/agent calls.
+- When to add LangGraph? If we need conditional branching, verifier/fix steps, automatic retry/looping, multi-agent orchestration, or richer state management, moving to a graph-based flow makes sense.
+- Roadmap: When that complexity shows up, model the router + agent flow as a LangGraph, then layer in branching/iterative steps. Until then, we keep the setup lean.
+
 ## DevOps
 - `Dockerfile` + `docker-compose.yml` run API, worker, Redis, Mongo.
 - GitHub Actions: `ci.yml` runs pytest.

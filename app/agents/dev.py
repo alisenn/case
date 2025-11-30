@@ -57,6 +57,8 @@ class DevAgent(BaseWorker):
 
     def write_file(self, filename: str, content: str) -> dict:
         try:
+            if ".." in filename or filename.startswith(("/", "\\")):
+                return {"message": "Invalid filename"}
             safe_name = Path(filename).name or "solution.txt"
             filepath = self._ensure_unique_path(safe_name)
             with open(filepath, "w", encoding="utf-8") as f:

@@ -1,3 +1,4 @@
+import logging
 from langchain_openai import ChatOpenAI
 try:
     from langchain_community.tools import DuckDuckGoSearchRun
@@ -6,6 +7,8 @@ except ImportError:
     SEARCH_AVAILABLE = False
 
 from app.agents.base import BaseWorker
+
+logger = logging.getLogger(__name__)
 
 
 class ContentAgent(BaseWorker):
@@ -39,4 +42,5 @@ class ContentAgent(BaseWorker):
             else:
                 return super().execute(task)
         except Exception as e:
+            logger.error(f"Search failed: {e}", exc_info=True)
             return f"Error during search: {str(e)}. Fallback: {super().execute(task)}"

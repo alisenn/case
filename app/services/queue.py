@@ -4,7 +4,7 @@ from app.agents.dev import DevAgent
 from app.agents.content import ContentAgent
 from app.agents.constants import AgentType
 from app.api.models import TaskResult
-from app.services.db import get_logs_collection
+from app.services.mongo import get_logs_collection
 
 peer_agent = PeerAgent()
 dev_agent = DevAgent()
