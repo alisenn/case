@@ -2,7 +2,9 @@ from langchain_openai import ChatOpenAI
 from app.core.config import settings
 
 
-class BaseWorker:
+class BaseAgent:
+    """Shared LLM setup and basic execute behavior for agents."""
+
     def __init__(self, role: str):
         self.role = role
         self.llm = ChatOpenAI(

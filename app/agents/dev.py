@@ -1,9 +1,9 @@
 from pathlib import Path
-from app.agents.base import BaseWorker
+from app.agents.base_agent import BaseAgent
 from app.core.config import settings
 
 
-class DevAgent(BaseWorker):
+class DevAgent(BaseAgent):
     def __init__(self):
         super().__init__("Dev Agent")
         self.output_dir = Path(settings.OUTPUT_DIR)

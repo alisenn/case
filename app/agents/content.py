@@ -1,14 +1,18 @@
 
+import logging
+
+from app.agents.base_agent import BaseAgent
+
 try:
     from langchain_community.tools import DuckDuckGoSearchRun
     SEARCH_AVAILABLE = True
 except ImportError:
     SEARCH_AVAILABLE = False
 
-from app.agents.base import BaseWorker
+logger = logging.getLogger(__name__)
 
 
-class ContentAgent(BaseWorker):
+class ContentAgent(BaseAgent):
     def __init__(self):
         super().__init__("Content Agent")
         if SEARCH_AVAILABLE:
@@ -29,14 +33,15 @@ class ContentAgent(BaseWorker):
                 search_results = self.search_tool.run(task)
                 # 2. Summarize with LLM (no sources section)
                 prompt = (
-                    "You are a research assistant. Use the provided search snippets to answer. "
-                    "Include a 'Sources' section at the end with relevant URLs or references.\n\n"
+                    "You are a research assistant. Use ONLY the provided search snippets to answer concisely. "
+                    "Do not add a sources section or cite links.\n\n"
                     f"User asked: {task}\n\n"
                     f"Search Results:\n{search_results}\n\n"
-                    "Answer (include sources):"
+                    "Answer:"
                 )
                 return super().execute(prompt)
             else:
                 return super().execute(task)
         except Exception as e:
+            logger.error(f"Search failed: {e}", exc_info=True)
             return f"Error during search: {str(e)}. Fallback: {super().execute(task)}"
