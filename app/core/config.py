@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     OPENAI_MODEL_ROUTER: str = os.getenv("OPENAI_MODEL_ROUTER", "gpt-4o-mini")
     OPENAI_MODEL_WORKER: str = os.getenv("OPENAI_MODEL_WORKER", "gpt-4o-mini")
     OUTPUT_DIR: str = os.getenv("OUTPUT_DIR", "outputs")
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
+    GOOGLE_CSE_ID: str = os.getenv("GOOGLE_CSE_ID", "")
 
     class Config:
         env_file = ".env"
