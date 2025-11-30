@@ -1,4 +1,5 @@
 from langchain_openai import ChatOpenAI
+
 from app.core.config import settings
 
 
@@ -9,7 +10,7 @@ class BaseAgent:
         self.role = role
         self.llm = ChatOpenAI(
             model=settings.OPENAI_MODEL_WORKER,
-            temperature=0.7,
+            temperature=0.2,
             openai_api_key=settings.OPENAI_API_KEY
         ) if settings.OPENAI_API_KEY else None
 
