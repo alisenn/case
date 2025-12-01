@@ -85,3 +85,9 @@ curl http://localhost:8000/v1/agent/status/<task_id>
 - Input validation & security: task length limits, auth, PII redaction.
 - Robust retries/backoff for Mongo/Redis, dead-letter queue for failed tasks.
 - API rate limiting + request ID propagation for tracing.
+- **Session / Conversation Memory**: Currently each request is stateless. For multi-turn conversations:
+  - Accept `session_id` in request payload
+  - Store conversation history in Redis or MongoDB keyed by session
+  - Use LangChain's `ConversationBufferMemory` or `RedisChatMessageHistory` to maintain context
+  - Pass message history to LLM calls so agents can reference previous turns
+  - Consider TTL for sessions to manage memory/storage
