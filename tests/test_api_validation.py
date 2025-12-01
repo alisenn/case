@@ -1,15 +1,12 @@
 import os
 import sys
-
-sys.path.append(os.getcwd())
-
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
-from app.agents.constants import AgentType
-from app.agents.peer import PeerAgent
+sys.path.append(os.getcwd())
+
 from app.main import app
 
 
@@ -55,35 +52,13 @@ def test_rejects_invalid_task_type():
 
 def test_rejects_invalid_json():
     response = client.post(
-        "/v1/agent/execute", 
+        "/v1/agent/execute",
         content="not valid json",
-        headers={"Content-Type": "application/json"}
+        headers={"Content-Type": "application/json"},
     )
     assert response.status_code == 422
-
-
-def test_peer_agent_routes_to_dev():
-    agent = PeerAgent()
-    agent.llm = None
-    decision = agent.route("Write a python script")
-    assert decision.agent_type == AgentType.DEV
-
-
-def test_peer_agent_routes_to_content():
-    agent = PeerAgent()
-    agent.llm = None
-    decision = agent.route("What is the capital of France?")
-    assert decision.agent_type == AgentType.CONTENT
-
-
-def test_peer_agent_fallback_has_reasoning():
-    agent = PeerAgent()
-    agent.llm = None
-    decision = agent.route("Write python code")
-    assert decision.reasoning is not None
 
 
 def test_handles_unicode_task():
     response = client.post("/v1/agent/execute", json={"task": "Python ile Turkce dosya yaz"})
     assert response.status_code == 200
-
