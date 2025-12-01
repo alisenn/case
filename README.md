@@ -78,8 +78,30 @@ curl http://localhost:8000/v1/agent/status/<task_id>
 - To extend coverage: add search happy-path with Google CSE keys, file-write paths for DevAgent, and Mongo persistence/queue failure cases.
 
 ## AI & Prompting
-- LLM: OpenAI models configured via env (`OPENAI_MODEL_ROUTER`, `OPENAI_MODEL_WORKER`); defaults are `gpt-4o-mini` for both.
-- Prompts are concise and task-focused; ContentAgent prompt explicitly requests cited sources when Google search results are available.
+
+### LLM Selection
+- **Models**: OpenAI `gpt-4o-mini` (default) - optimized for cost/performance balance
+- **Router Model**: Configurable via `OPENAI_MODEL_ROUTER`
+- **Worker Model**: Configurable via `OPENAI_MODEL_WORKER`
+
+### Prompt Design
+
+| Agent | Strategy | Key Decisions |
+|-------|----------|---------------|
+| **PeerAgent** | Single-word output constraint ("dev" or "content") | Minimizes parsing errors, enables keyword fallback |
+| **ContentAgent** | Grounding with web sources + citation format `[1], [2]` | Reduces hallucination, enables verifiability |
+| **DevAgent** | Role prompting ("experienced developer") + Python default | Consistent quality, handles ambiguous requests |
+
+### Techniques Used
+- **Role prompting**: Persona assignment for consistent output style
+- **Grounding**: Web search results injected to reduce hallucination
+- **Explicit constraints**: Single-word responses for reliable parsing
+- **Graceful fallback**: Keyword-based routing when LLM unavailable
+
+### Future Improvements
+- Few-shot examples for edge cases
+- Prompt versioning for A/B testing
+- Chain-of-thought for complex tasks
 
 ## Production Hardening Ideas
 - Input validation & security: task length limits, auth, PII redaction.
