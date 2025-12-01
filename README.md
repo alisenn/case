@@ -91,3 +91,12 @@ curl http://localhost:8000/v1/agent/status/<task_id>
   - Use LangChain's `ConversationBufferMemory` or `RedisChatMessageHistory` to maintain context
   - Pass message history to LLM calls so agents can reference previous turns
   - Consider TTL for sessions to manage memory/storage
+
+
+## Live Demo
+
+The system is currently running locally and exposed via ngrok tunnel:
+
+**API Documentation (Swagger UI):** https://oversilent-cecile-latterly.ngrok-free.dev/docs
+
+> ⚠️ **Note:** This is not deployed to a production server. The application runs on a local machine and is temporarily exposed to the internet using [ngrok](https://ngrok.com/). Availability depends on the local machine being online and the ngrok session being active.
