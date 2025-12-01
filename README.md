@@ -20,13 +20,13 @@ graph TD
 - **PeerAgent**: Routes tasks to `DevAgent` or `ContentAgent` via simple keyword fallback or LLM (OpenAI, defaults to `OPENAI_MODEL_ROUTER`).
 - **DevAgent**: Handles coding-style tasks; can perform simple file writes when prompted.
 - **ContentAgent**: Uses Google Custom Search HTTP API (when `GOOGLE_API_KEY` + `GOOGLE_CSE_ID` are set) to pull snippets and have the LLM answer with citations; without those keys it falls back to plain LLM answers (no citations).
-- **FastAPI**: Exposes `POST /v1/agent/execute` and `GET /v1/agent/status/{task_id}`.
+- **FastAPI**: Exposes `POST /v1/agent/execute` and `GET /v1/agent/status/{task_id}` and `POST /v1/agent/execute/sync`.
 - **Celery + Redis**: Queue-backed task execution; workers are stateless and horizontally scalable.
 - **MongoDB**: Persists task results (including errors) as Pydantic-validated documents (`task_logs` collection).
 
 ## Running Locally
 1) Prereqs: Docker + Docker Compose.  
-2) Configure environment (`.env` is read by both API and worker):
+2) Configure environment (`.env-example` is read by both API and worker): you should create your own `.env` file based on it. Minimal required vars:
 ```
 OPENAI_API_KEY=your-openai-api-key  # optional; fallback routing works without it
 REDIS_URL=redis://redis:6379/0
@@ -82,7 +82,6 @@ curl http://localhost:8000/v1/agent/status/<task_id>
 - Prompts are concise and task-focused; ContentAgent prompt explicitly requests cited sources when Google search results are available.
 
 ## Production Hardening Ideas
-- Add structured logging (JSON) and observability (OpenTelemetry).
 - Input validation & security: task length limits, auth, PII redaction.
 - Robust retries/backoff for Mongo/Redis, dead-letter queue for failed tasks.
 - API rate limiting + request ID propagation for tracing.

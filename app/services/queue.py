@@ -1,10 +1,15 @@
-from app.services.celery_app import celery_app
-from app.agents.peer import PeerAgent
-from app.agents.dev import DevAgent
-from app.agents.content import ContentAgent
+import logging
+
 from app.agents.constants import AgentType
+from app.agents.content import ContentAgent
+from app.agents.dev import DevAgent
+from app.agents.peer import PeerAgent
 from app.api.models import TaskResult
+from app.services.celery_app import celery_app
 from app.services.mongo import get_logs_collection
+
+logger = logging.getLogger(__name__)
+
 
 peer_agent = PeerAgent()
 dev_agent = DevAgent()
@@ -15,7 +20,10 @@ def _log_to_mongo(task_result: TaskResult):
         get_logs_collection().insert_one(task_result.model_dump())
     except Exception as log_err:
         # Best-effort logging; do not break task completion if logging fails
-        print(f"[Logging] Failed to write task {task_result.task_id} to MongoDB: {log_err}")
+        logger.error(
+            "Failed to write task to MongoDB",
+            extra={"task_id": task_result.task_id, "error": str(log_err)}
+        )
 
 @celery_app.task(name="app.services.queue.process_task")
 def process_task(task_id: str, task_description: str):
